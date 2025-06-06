@@ -1,8 +1,15 @@
 # EMres
 Diffusion-based image restoration pipeline for degraded early music manuscripts, including bleedthrough removal, staff line recovery, and note repair with contextual inpainting
 
-# Repository state
-We are currently in the process of piecing toghether all relevant code parts and providing some basic documentation. Not all code has been uploaded yet. We try to complete this as fast as possible.
+## Repository Status
+
+This repository contains the final code for the two diffusion models that make up the complete restoration pipeline described in the thesis. These include:
+
+- **Combined diffusion model** for ink bleedthrough removal and staff line restoration  
+- **Note restoration model** for recovering missing or degraded musical symbols
+
+Additional experimental configurations discussed in the thesis are based on similar code structures but are not included here.  
+If you are interested in these variants, feel free to reach out.
 
 
 ## Attribution
