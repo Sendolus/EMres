@@ -22,7 +22,6 @@ for pickle_file in os.listdir(pickle_folder):
         output_path = output_folder + "/" + f"{img_name}.jpeg"
         cv2.imwrite(output_path, mask)
 
-
         print(f"¨Processed: {pickle_file}, i = {i}")
 
     except Exception as e:
