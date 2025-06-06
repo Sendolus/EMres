@@ -1,3 +1,8 @@
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+Modifications: Generalized functions to take different numbers and types of inputs.
+"""
 import math
 import torch
 import abc
@@ -223,23 +228,19 @@ class IRSDE(SDE):
         noise = self.model(x, self.mu_style, t, **kwargs)
         return self.get_score_from_noise(noise, t)
 
+    # These are remnants of failed experiment using zero-shot style transfer
     def score_fn_styletransfer(self, x, style_x, t, **kwargs):
-        # Step 1: Pass style_x through the network to store K/V features.
-        # Enable store_mode in all attention layers.
         for module in self.model.modules():
             if module.__class__.__name__ == "StyleInjectionLinearAttention":
                 module.store_mode = True
                 module.use_style = False
-        # Forward pass with style_x (output is ignored)
         noise_style = self.model(style_x, self.mu_style, t, **kwargs)
 
-        # Step 2: Disable store_mode and enable style injection.
         for module in self.model.modules():
             if module.__class__.__name__ == "StyleInjectionLinearAttention":
                 module.store_mode = False
                 module.use_style = True
 
-        # Step 3: Pass the content image; the attention modules will now use the stored style K/V.
         noise = self.model(x, self.mu, t, **kwargs)
 
         return self.get_score_from_noise(noise, t), self.get_score_from_noise(noise_style, t)
@@ -310,11 +311,9 @@ class IRSDE(SDE):
         if xt_style is not None:
             sx = xt_style.clone()
         for t in tqdm(reversed(range(1, T + 1))):
-            # score = self.score_fn(x, t, **kwargs)
-            # style_state = sx + torch.randn_like(sx) * self.sigma_bars[t]
             score = self.score_fn(x, t, **kwargs)
-            # score_style = self.score_fn_mu_style(sx, t, **kwargs)
-            # score, score_style = self.score_fn_styletransfer(x, sx, t, **kwargs)
+            # The code below handles a bunch of different input configurations.
+            # We are aware that it can be generalized better in future research.
             if x.shape[1] == 5:
                 mask_note = xt[:, 3:4, :, :]
                 mask_staff = xt[:, 4:5, :, :]
@@ -386,7 +385,6 @@ class IRSDE(SDE):
                     tvutils.save_image(x.data, f'{save_dir}/state_{idx}.png', normalize=False)
 
         return x
-
 
     # sample ode using Black-box ODE solver (not used)
     def ode_sampler(self, xt, rtol=1e-5, atol=1e-5, method='RK45', eps=1e-3,):

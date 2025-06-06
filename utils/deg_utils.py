@@ -1,3 +1,7 @@
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+"""
 import os
 import cv2
 import abc
