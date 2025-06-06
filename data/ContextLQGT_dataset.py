@@ -1,3 +1,8 @@
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+Modifications: extended to load three contextual examples per image.
+"""
 import os
 import random
 import sys
@@ -118,14 +123,14 @@ class ContextLQGTDataset(data.Dataset):
         if self.LR_paths:  # LR exist
             LR_path = self.LR_paths[index]
 
-            base_dir = os.path.dirname(os.path.dirname(LR_path))  # => "datasets/Notes_trainV2"
-            context_dir = os.path.join(base_dir, "Context")  # => "datasets/Notes_trainV2/Context"
-            filename = os.path.basename(LR_path)  # => "3272.jpeg"
-            file_stem = os.path.splitext(filename)[0]  # => "3272"
-
+            base_dir = os.path.dirname(os.path.dirname(LR_path))
+            context_dir = os.path.join(base_dir, "Context")
+            filename = os.path.basename(LR_path)
+            file_stem = os.path.splitext(filename)[0]
             context1_path = os.path.join(context_dir, f"{file_stem}_0.jpeg")
             context2_path = os.path.join(context_dir, f"{file_stem}_1.jpeg")
             context3_path = os.path.join(context_dir, f"{file_stem}_2.jpeg")
+
             if self.opt["data_type"] == "lmdb":
                 resolution = [int(s) for s in self.LR_sizes[index].split("_")]
             else:

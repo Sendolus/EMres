@@ -1,3 +1,8 @@
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+Modifications: extended to load and return an additional condition (input mask).
+"""
 import os
 import random
 import sys
@@ -118,6 +123,7 @@ class ConditionalLQGTDataset(data.Dataset):
         if self.LR_paths:  # LR exist
             LR_path = self.LR_paths[index]
             mask_path = self.mask_paths[index]
+            # Force masks to grayscale
             if self.opt["data_type"] == "lmdb":
                 resolution = [int(s) for s in self.LR_sizes[index].split("_")]
             else:
@@ -125,7 +131,7 @@ class ConditionalLQGTDataset(data.Dataset):
             img_LR = util.read_img(self.LR_env, LR_path, resolution)
             img_mask = util.read_img(self.mask_env, mask_path, resolution)
             if img_mask.ndim == 3 and img_mask.shape[2] == 3:
-                img_mask = img_mask[:, :, 0]  # Take one channel (since all are identical)
+                img_mask = img_mask[:, :, 0]
         else:  # down-sampling on-the-fly (NOT IMPLEMENTED MASK HERE)
             # randomly scale during training
             if self.opt["phase"] == "train":
@@ -208,9 +214,10 @@ class ConditionalLQGTDataset(data.Dataset):
         img_LR = torch.from_numpy(
             np.ascontiguousarray(np.transpose(img_LR, (2, 0, 1)))
         ).float()
-        img_mask = np.squeeze(img_mask)  # Remove extra dimensions (H, W, 1) → (H, W)
-        img_mask = np.expand_dims(img_mask, axis=0)  # Ensure it is (1, H, W)
-        img_mask = torch.from_numpy(np.ascontiguousarray(img_mask)).float()  # Convert to tensor
+
+        # Note masks and staff masks are grayscale and need to be handled differently
+        img_mask = np.expand_dims(img_mask, axis=0)
+        img_mask = torch.from_numpy(np.ascontiguousarray(img_mask)).float()
         if LR_path is None:
             LR_path = GT_path
 

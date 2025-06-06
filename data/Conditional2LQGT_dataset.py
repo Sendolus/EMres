@@ -1,3 +1,8 @@
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+Modifications: extended to load and return two additional conditions (input masks).
+"""
 import os
 import random
 import sys
@@ -139,10 +144,11 @@ class Conditional2LQGTDataset(data.Dataset):
             img_LR = util.read_img(self.LR_env, LR_path, resolution)
             img_mask_note = util.read_img(self.mask_note_env, mask_note_path, resolution)
             img_mask_staff = util.read_img(self.mask_staff_env, mask_staff_path, resolution)
+            # Force masks to grayscale
             if img_mask_note.ndim == 3 and img_mask_note.shape[2] == 3:
-                img_mask_note = img_mask_note[:, :, 0]  # Take one channel (since all are identical)
+                img_mask_note = img_mask_note[:, :, 0]
             if img_mask_staff.ndim == 3 and img_mask_staff.shape[2] == 3:
-                img_mask_staff = img_mask_staff[:, :, 0]  # Take one channel (since all are identical)
+                img_mask_staff = img_mask_staff[:, :, 0]
         else:  # down-sampling on-the-fly (NOT IMPLEMENTED MASK HERE)
             # randomly scale during training
             if self.opt["phase"] == "train":
@@ -211,7 +217,7 @@ class Conditional2LQGTDataset(data.Dataset):
             H, W, C = img_LR.shape
             img_LR = util.channel_convert(C, self.opt["color"], [img_LR])[
                 0
-            ]  # TODO during val no definition
+            ]
             img_GT = util.channel_convert(img_GT.shape[2], self.opt["color"], [img_GT])[
                 0
             ]
@@ -226,12 +232,13 @@ class Conditional2LQGTDataset(data.Dataset):
         img_LR = torch.from_numpy(
             np.ascontiguousarray(np.transpose(img_LR, (2, 0, 1)))
         ).float()
-        img_mask_note = np.squeeze(img_mask_note)  # Remove extra dimensions (H, W, 1) → (H, W)
-        img_mask_note = np.expand_dims(img_mask_note, axis=0)  # Ensure it is (1, H, W)
-        img_mask_note = torch.from_numpy(np.ascontiguousarray(img_mask_note)).float()  # Convert to tensor
-        img_mask_staff = np.squeeze(img_mask_staff)  # Remove extra dimensions (H, W, 1) → (H, W)
-        img_mask_staff = np.expand_dims(img_mask_staff, axis=0)  # Ensure it is (1, H, W)
-        img_mask_staff = torch.from_numpy(np.ascontiguousarray(img_mask_staff)).float()  # Convert to tensor
+
+        # Note masks and staff masks are grayscale and need to be handled differently
+        img_mask_note = np.expand_dims(img_mask_note, axis=0)
+        img_mask_note = torch.from_numpy(np.ascontiguousarray(img_mask_note)).float()
+        img_mask_staff = np.expand_dims(img_mask_staff, axis=0)
+        img_mask_staff = torch.from_numpy(np.ascontiguousarray(img_mask_staff)).float()
+
         if LR_path is None:
             LR_path = GT_path
 

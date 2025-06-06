@@ -1,3 +1,8 @@
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+Modifications: adapted stereo to recto verso by flipping verso images.
+"""
 import os
 import random
 import sys
@@ -15,7 +20,7 @@ except ImportError:
     pass
 
 
-class StereoLQGTDataset(data.Dataset):
+class RVLQGTDataset(data.Dataset):
     """
     Read LR (Low Quality, here is LR) and GT image pairs.
     The pair is ensured by 'sorted' function, so please check the name convention.
@@ -121,14 +126,6 @@ class StereoLQGTDataset(data.Dataset):
             img_GT_L = img_GT_L[rnd_h_GT : rnd_h_GT + GT_size, rnd_w_GT : rnd_w_GT + GT_size, :]
             img_GT_R = img_GT_R[rnd_h_GT : rnd_h_GT + GT_size, rnd_w_GT : rnd_w_GT + GT_size, :]
 
-            # augmentation - flip, rotate
-            # img_LR_L, img_LR_R, img_GT_L, img_GT_R = util.augment(
-            #     [img_LR_L, img_LR_R, img_GT_L, img_GT_R],
-            #     self.opt["use_flip"],
-            #     self.opt["use_rot"],
-            #     swap=False,
-            #     mode=self.opt["mode"],
-            # )
         elif LR_size is not None:
             H, W, C = img_LR_L.shape
             assert LR_size == GT_size // scale, "GT size does not match LR size"
@@ -158,7 +155,7 @@ class StereoLQGTDataset(data.Dataset):
             img_LR_L = img_LR_L[:, :, [2, 1, 0]]
             img_LR_R = img_LR_R[:, :, [2, 1, 0]]
 
-        # Flip right-side images along vertical axis
+        # Flip verso images along vertical axis
         img_GT_R = img_GT_R[:, ::-1, :]
         img_LR_R = img_LR_R[:, ::-1, :]
 

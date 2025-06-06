@@ -1,6 +1,9 @@
-"""create dataset and dataloader"""
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+Modifications: Added new training loader configurations.
+"""
 import logging
-
 import torch
 import torch.utils.data
 
@@ -35,26 +38,11 @@ def create_dataloader(dataset, dataset_opt, opt=None, sampler=None):
 
 def create_dataset(dataset_opt):
     mode = dataset_opt["mode"]
-    if mode == "LQ":  # Predictor
-        from data.LQ_dataset import LQDataset as D
-        dataset = D(dataset_opt)
-    elif mode == "LQGT":  # SFTMD
+    if mode == "LQGT":
         from data.LQGT_dataset import LQGTDataset as D
         dataset = D(dataset_opt)
-    elif mode == "GT":  # Corrector
-        from data.GT_dataset import GTDataset as D
-        dataset = D(dataset_opt)
-    elif mode == 'SteLQGT':
-        from data.StereoLQGT_dataset import StereoLQGTDataset as D
-        dataset = D(dataset_opt)
-    elif mode == 'SteLQ':
-        from data.StereoLQ_dataset import StereoLQDataset as D
-        dataset = D(dataset_opt)
-    elif mode == 'BokehLQGT':
-        from data.BokehLQGT_dataset import BokehLQGTDataset as D
-        dataset = D(dataset_opt)
-    elif mode == 'BokehLQ':
-        from data.BokehLQ_dataset import BokehLQDataset as D
+    elif mode == 'RVLQGT':
+        from data.RVLQGT_Dataset import RVLQGTDataset as D
         dataset = D(dataset_opt)
     elif mode == "CondLQGT":
         from data.ConditionalLQGT_dataset import ConditionalLQGTDataset as D
@@ -62,14 +50,11 @@ def create_dataset(dataset_opt):
     elif mode == "Cond2LQGT":
         from data.Conditional2LQGT_dataset import Conditional2LQGTDataset as D
         dataset = D(dataset_opt)
-    elif mode == "StyleLQGT":
-        from data.StyleLQGT_dataset import StyleLQGTDataset as D
-        dataset = D(dataset_opt)
     elif mode == "ContextLQGT":
         from data.ContextLQGT_dataset import ContextLQGTDataset as D
         dataset = D(dataset_opt)
-    elif mode == "StereoCondLQGT":
-        from data.StereoCondLQGT_dataset import StereoCondLQGTDataset as D
+    elif mode == "RVCondLQGT":
+        from data.RVCondLQGT_dataset import RVCondLQGTDataset as D
         dataset = D(dataset_opt)
     else:
         raise NotImplementedError("Dataset [{:s}] is not recognized.".format(mode))

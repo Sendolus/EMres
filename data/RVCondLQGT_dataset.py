@@ -1,3 +1,8 @@
+"""
+This file is adapted from: https://github.com/Algolzw/image-restoration-sde.
+Original license: MIT (Copyright © 2023 Ziwei Luo)
+Modifications: extended to load and return input masks (for staff lines) and flip verso images.
+"""
 import os
 import random
 import sys
@@ -15,7 +20,7 @@ except ImportError:
     pass
 
 
-class StereoCondLQGTDataset(data.Dataset):
+class RVCondLQGTDataset(data.Dataset):
     """
     Read LR (Low Quality, here is LR) and GT image pairs.
     The pair is ensured by 'sorted' function, so please check the name convention.
@@ -130,10 +135,11 @@ class StereoCondLQGTDataset(data.Dataset):
             img_LR_R = util.read_img(self.LR_env, LR_path_R, resolution)
             img_mask_L = util.read_img(self.mask_env, mask_path_L, resolution)
             img_mask_R = util.read_img(self.mask_env, mask_path_R, resolution)
+            # Force masks to grayscale
             if img_mask_L.ndim == 3 and img_mask_L.shape[2] == 3:
-                img_mask_L = img_mask_L[:, :, 0]  # Take one channel (since all are identical)
+                img_mask_L = img_mask_L[:, :, 0]
             if img_mask_R.ndim == 3 and img_mask_R.shape[2] == 3:
-                img_mask_R = img_mask_R[:, :, 0]  # Take one channel (since all are identical)
+                img_mask_R = img_mask_R[:, :, 0]
 
         if self.opt["phase"] == "train":
             H, W, C = img_LR_L.shape
@@ -150,14 +156,6 @@ class StereoCondLQGTDataset(data.Dataset):
             img_GT_L = img_GT_L[rnd_h_GT : rnd_h_GT + GT_size, rnd_w_GT : rnd_w_GT + GT_size, :]
             img_GT_R = img_GT_R[rnd_h_GT : rnd_h_GT + GT_size, rnd_w_GT : rnd_w_GT + GT_size, :]
 
-            # augmentation - flip, rotate
-            # img_LR_L, img_LR_R, img_GT_L, img_GT_R = util.augment(
-            #     [img_LR_L, img_LR_R, img_GT_L, img_GT_R],
-            #     self.opt["use_flip"],
-            #     self.opt["use_rot"],
-            #     swap=False,
-            #     mode=self.opt["mode"],
-            # )
         elif LR_size is not None:
             H, W, C = img_LR_L.shape
             assert LR_size == GT_size // scale, "GT size does not match LR size"
@@ -203,13 +201,11 @@ class StereoCondLQGTDataset(data.Dataset):
         img_LR_L = torch.from_numpy(np.ascontiguousarray(np.transpose(img_LR_L, (2, 0, 1)))).float()
         img_LR_R = torch.from_numpy(np.ascontiguousarray(np.transpose(img_LR_R, (2, 0, 1)))).float()
 
-        img_mask_L = np.squeeze(img_mask_L)  # Remove extra dimensions (H, W, 1) → (H, W)
-        img_mask_L = np.expand_dims(img_mask_L, axis=0)  # Ensure it is (1, H, W)
-        img_mask_L = torch.from_numpy(np.ascontiguousarray(img_mask_L)).float()  # Convert to tensor
-
-        img_mask_R = np.squeeze(img_mask_R)  # Remove extra dimensions (H, W, 1) → (H, W)
-        img_mask_R = np.expand_dims(img_mask_R, axis=0)  # Ensure it is (1, H, W)
-        img_mask_R = torch.from_numpy(np.ascontiguousarray(img_mask_R)).float()  # Convert to tensor
+        # Note masks and staff masks are grayscale and need to be handled differently
+        img_mask_L = np.expand_dims(img_mask_L, axis=0)
+        img_mask_L = torch.from_numpy(np.ascontiguousarray(img_mask_L)).float()
+        img_mask_R = np.expand_dims(img_mask_R, axis=0)
+        img_mask_R = torch.from_numpy(np.ascontiguousarray(img_mask_R)).float()
 
         img_GT = torch.cat([img_GT_L, img_GT_R], dim=0)
         img_LR = torch.cat([img_LR_L, img_LR_R], dim=0)
